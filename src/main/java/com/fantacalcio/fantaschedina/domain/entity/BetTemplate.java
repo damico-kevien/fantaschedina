@@ -26,9 +26,7 @@ public class BetTemplate {
     @Column(nullable = false)
     private Integer requiredCount;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Double overUnderThreshold = 2.5;
+    private Double overUnderThreshold;
 
     @Column(nullable = false)
     private Integer orderIndex;
