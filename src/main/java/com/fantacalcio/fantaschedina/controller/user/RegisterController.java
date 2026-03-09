@@ -1,0 +1,58 @@
+package com.fantacalcio.fantaschedina.controller.user;
+
+import com.fantacalcio.fantaschedina.dto.RegisterRequest;
+import com.fantacalcio.fantaschedina.exception.InvalidInviteException;
+import com.fantacalcio.fantaschedina.service.InviteService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequiredArgsConstructor
+public class RegisterController {
+
+    private final InviteService inviteService;
+
+    @GetMapping("/register")
+    public String showRegisterForm(@RequestParam String token, Model model) {
+        try {
+            inviteService.findValidInvite(token);
+        } catch (InvalidInviteException e) {
+            model.addAttribute("error", e.getMessage());
+            return "invite-error";
+        }
+
+        model.addAttribute("token", token);
+        model.addAttribute("registerRequest", new RegisterRequest());
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestParam String token,
+                           @Valid @ModelAttribute RegisterRequest registerRequest,
+                           BindingResult result,
+                           Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("token", token);
+            return "register";
+        }
+
+        try {
+            inviteService.acceptForNewUser(
+                token,
+                registerRequest.getUsername(),
+                registerRequest.getPassword(),
+                registerRequest.getFantaTeamName()
+            );
+        } catch (InvalidInviteException | IllegalArgumentException e) {
+            model.addAttribute("token", token);
+            model.addAttribute("error", e.getMessage());
+            return "register";
+        }
+
+        return "redirect:/login?registered";
+    }
+}
