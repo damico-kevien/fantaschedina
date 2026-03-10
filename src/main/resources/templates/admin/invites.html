@@ -77,15 +77,16 @@
                                 <th>Lega</th>
                                 <th>Stato</th>
                                 <th>Scadenza</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:if="${#lists.isEmpty(invites)}">
-                                <td colspan="4" class="text-center text-muted py-3">Nessun invito inviato</td>
+                                <td colspan="5" class="text-center text-muted py-3">Nessun invito inviato</td>
                             </tr>
                             <tr th:each="invite : ${invites}">
                                 <td th:text="${invite.email}"></td>
-                                <td th:text="${invite.leagueId}"></td>
+                                <td th:text="${leagueNames[invite.leagueId]}"></td>
                                 <td>
                                     <span th:text="${invite.status}"
                                           th:classappend="${invite.status.name() == 'PENDING'} ? 'badge bg-warning text-dark' :
@@ -94,6 +95,18 @@
                                     </span>
                                 </td>
                                 <td th:text="${#temporals.format(invite.expiresAt, 'dd/MM/yyyy')}"></td>
+                                <td>
+                                    <button th:if="${invite.status.name() == 'PENDING'}"
+                                            type="button"
+                                            class="btn btn-outline-danger btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmModal"
+                                            th:attr="data-confirm-action=@{/admin/invites/{id}/revoke(id=${invite.id})},
+                                                     data-confirm-message='Revocare l\'invito per ' + ${invite.email} + '?',
+                                                     data-confirm-title='Revoca invito'">
+                                        Revoca
+                                    </button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -103,6 +116,8 @@
     </div>
 
 </div>
+
+<div th:replace="~{fragments/confirm-modal :: confirmModal}"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

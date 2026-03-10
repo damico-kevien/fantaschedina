@@ -134,6 +134,16 @@ public class InviteService {
         fantaTeamRepository.save(team);
     }
 
+    public void revokeInvite(Long inviteId) {
+        Invite invite = inviteRepository.findById(inviteId)
+            .orElseThrow(() -> new IllegalArgumentException("Invito non trovato"));
+        if (invite.getStatus() != InviteStatus.PENDING) {
+            throw new IllegalStateException("Solo gli inviti PENDING possono essere revocati");
+        }
+        invite.setStatus(InviteStatus.EXPIRED);
+        inviteRepository.save(invite);
+    }
+
     private void markAsUsed(Invite invite, Long userId) {
         invite.setStatus(InviteStatus.USED);
         invite.setUsedAt(LocalDateTime.now());

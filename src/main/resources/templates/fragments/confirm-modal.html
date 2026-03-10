@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="confirmModal">
+    <div class="modal fade" id="confirmModal" tabindex="-1"
+         aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">Conferma</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                    Sei sicuro di voler procedere?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                    <form id="confirmModalForm" method="post" class="m-0">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" id="confirmModalSubmit" class="btn btn-danger">Conferma</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('confirmModal').addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            const title   = trigger.getAttribute('data-confirm-title')     || 'Conferma';
+            const message = trigger.getAttribute('data-confirm-message')   || 'Sei sicuro di voler procedere?';
+            const action  = trigger.getAttribute('data-confirm-action')    || '';
+            const btnLabel = trigger.getAttribute('data-confirm-btn')      || 'Conferma';
+            const btnClass = trigger.getAttribute('data-confirm-btn-class')|| 'btn-danger';
+
+            document.getElementById('confirmModalLabel').textContent = title;
+            document.getElementById('confirmModalBody').textContent  = message;
+            document.getElementById('confirmModalForm').setAttribute('action', action);
+
+            const submit = document.getElementById('confirmModalSubmit');
+            submit.textContent = btnLabel;
+            submit.className = 'btn ' + btnClass;
+        });
+    </script>
+
+</div>
+
+</body>
+</html>
