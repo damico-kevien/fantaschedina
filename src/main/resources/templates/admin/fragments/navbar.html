@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/admin/dashboard">Fantaschedina Admin</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/leagues">Leghe</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/invites">Inviti</a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white small" sec:authentication="name"></span>
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-outline-light btn-sm">Esci</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+</body>
+</html>

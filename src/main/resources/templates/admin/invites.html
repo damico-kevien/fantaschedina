@@ -9,17 +9,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/admin/dashboard">Fantaschedina Admin</a>
-        <div class="d-flex align-items-center gap-3">
-            <span class="text-white small" sec:authentication="name"></span>
-            <form th:action="@{/logout}" method="post" class="m-0">
-                <button type="submit" class="btn btn-outline-light btn-sm">Esci</button>
-            </form>
-        </div>
-    </div>
-</nav>
+<div th:replace="~{admin/fragments/navbar :: navbar}"></div>
 
 <div class="container mt-4">
 
@@ -89,8 +79,7 @@
                                 <td th:text="${leagueNames[invite.leagueId]}"></td>
                                 <td>
                                     <span th:text="${invite.status}"
-                                          th:classappend="${invite.status.name() == 'PENDING'} ? 'badge bg-warning text-dark' :
-                                                          (${invite.status.name() == 'USED'} ? 'badge bg-success' : 'badge bg-secondary')"
+                                          th:classappend="${invite.status.name() == 'PENDING' ? 'bg-warning text-dark' : (invite.status.name() == 'USED' ? 'bg-success' : 'bg-secondary')}"
                                           class="badge">
                                     </span>
                                 </td>

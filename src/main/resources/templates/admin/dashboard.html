@@ -9,24 +9,7 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="/admin/dashboard">Fantaschedina Admin</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/admin/invites">Inviti</a>
-                </li>
-            </ul>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <span class="text-white small" sec:authentication="name"></span>
-            <form th:action="@{/logout}" method="post" class="m-0">
-                <button type="submit" class="btn btn-outline-light btn-sm">Esci</button>
-            </form>
-        </div>
-    </div>
-</nav>
+<div th:replace="~{admin/fragments/navbar :: navbar}"></div>
 
 <div class="container mt-4">
     <h4>Dashboard Amministratore</h4>
