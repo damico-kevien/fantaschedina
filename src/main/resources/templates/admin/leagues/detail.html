@@ -23,10 +23,14 @@
     </div>
 
     <!-- Header lega -->
-    <div class="mb-4">
-        <a href="/admin/leagues" class="text-muted small">← Leghe</a>
-        <h4 class="mb-0 mt-1" th:text="${league.name}"></h4>
-        <span class="text-muted" th:text="${league.season}"></span>
+    <div class="mb-4 d-flex justify-content-between align-items-end">
+        <div>
+            <a href="/admin/leagues" class="text-muted small">← Leghe</a>
+            <h4 class="mb-0 mt-1" th:text="${league.name}"></h4>
+            <span class="text-muted" th:text="${league.season}"></span>
+        </div>
+        <a th:href="@{/admin/leagues/{id}/calendar(id=${league.id})}"
+           class="btn btn-outline-secondary btn-sm">Calendario</a>
     </div>
 
     <div class="row g-4">
