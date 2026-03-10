@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantaschedina — Calendario</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{admin/fragments/navbar :: navbar}"></div>
+
+<div class="container mt-4">
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="mb-4">
+        <a th:href="@{/admin/leagues/{id}(id=${league.id})}" class="text-muted small">← <span th:text="${league.name}"></span></a>
+        <h4 class="mb-0 mt-1">Calendario</h4>
+        <span class="text-muted" th:text="${league.season}"></span>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Pannello azioni -->
+        <div class="col-md-4 d-flex flex-column gap-3">
+
+            <!-- Nuova giornata -->
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">Nuova giornata</div>
+                <div class="card-body">
+                    <form th:action="@{/admin/leagues/{id}/calendar/matchday(id=${league.id})}" method="post">
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="number"
+                                   placeholder="Numero giornata" min="1" required>
+                            <button type="submit" class="btn btn-primary">Aggiungi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Import CSV -->
+            <div class="card shadow-sm">
+                <div class="card-header fw-semibold">Importa calendario CSV</div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Formato richiesto: <code>matchday_number,home_team,away_team</code><br>
+                        I nomi delle squadre devono corrispondere esattamente ai FantaTeam della lega.
+                    </p>
+                    <form th:action="@{/admin/leagues/{id}/calendar/import(id=${league.id})}"
+                          method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-primary">Importa</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Lista giornate -->
+        <div class="col-md-8">
+            <div th:if="${#lists.isEmpty(matchdays)}" class="text-muted fst-italic">
+                Nessuna giornata caricata. Aggiungila manualmente o importa un CSV.
+            </div>
+
+            <div th:each="matchday : ${matchdays}" class="card shadow-sm mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">Giornata <span th:text="${matchday.number}"></span></span>
+                    <span class="badge"
+                          th:text="${matchday.status}"
+                          th:classappend="${matchday.status.name() == 'SCHEDULED'} ? 'bg-warning text-dark' :
+                                          (${matchday.status.name() == 'OPEN'} ? 'bg-success' :
+                                          (${matchday.status.name() == 'PROCESSED'} ? 'bg-secondary' : 'bg-primary'))">
+                    </span>
+                </div>
+                <div class="card-body">
+
+                    <!-- Partite -->
+                    <table class="table table-sm mb-3">
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(fixturesByMatchday[matchday.id])}">
+                                <td class="text-muted fst-italic">Nessuna partita</td>
+                            </tr>
+                            <tr th:each="fixture : ${fixturesByMatchday[matchday.id]}">
+                                <td th:text="${teamNames[fixture.homeFantaTeamId]}"></td>
+                                <td class="text-center text-muted">vs</td>
+                                <td th:text="${teamNames[fixture.awayFantaTeamId]}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Aggiungi partita (solo SCHEDULED) -->
+                    <form th:if="${matchday.status.name() == 'SCHEDULED'}"
+                          th:action="@{/admin/leagues/{lid}/calendar/{mid}/fixture(lid=${league.id},mid=${matchday.id})}"
+                          method="post" class="mb-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-sm-5">
+                                <label class="form-label form-label-sm mb-1">Casa</label>
+                                <select class="form-select form-select-sm" name="homeTeamId" required>
+                                    <option value="">— Squadra —</option>
+                                    <option th:each="entry : ${teamNames}"
+                                            th:value="${entry.key}"
+                                            th:text="${entry.value}"></option>
+                                </select>
+                            </div>
+                            <div class="col-sm-5">
+                                <label class="form-label form-label-sm mb-1">Trasferta</label>
+                                <select class="form-select form-select-sm" name="awayTeamId" required>
+                                    <option value="">— Squadra —</option>
+                                    <option th:each="entry : ${teamNames}"
+                                            th:value="${entry.key}"
+                                            th:text="${entry.value}"></option>
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm w-100">+</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Form date (solo SCHEDULED) -->
+                    <form th:if="${matchday.status.name() == 'SCHEDULED'}"
+                          th:action="@{/admin/leagues/{lid}/calendar/{mid}/schedule(lid=${league.id},mid=${matchday.id})}"
+                          method="post">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-sm-4">
+                                <label class="form-label form-label-sm mb-1">Inizio</label>
+                                <input type="datetime-local" class="form-control form-control-sm"
+                                       name="startAt"
+                                       th:value="${matchday.startAt != null ? #temporals.format(matchday.startAt, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label form-label-sm mb-1">Fine</label>
+                                <input type="datetime-local" class="form-control form-control-sm"
+                                       name="endAt"
+                                       th:value="${matchday.endAt != null ? #temporals.format(matchday.endAt, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="form-label form-label-sm mb-1">Deadline override</label>
+                                <input type="datetime-local" class="form-control form-control-sm"
+                                       name="deadlineOverride"
+                                       th:value="${matchday.deadlineOverride != null ? #temporals.format(matchday.deadlineOverride, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                            </div>
+                            <div class="col-12 mt-2">
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Salva date</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Date in sola lettura (stati avanzati) -->
+                    <div th:if="${matchday.status.name() != 'SCHEDULED'}" class="row g-2 text-muted small">
+                        <div class="col-sm-4">
+                            <strong>Inizio:</strong>
+                            <span th:text="${matchday.startAt != null ? #temporals.format(matchday.startAt, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                        </div>
+                        <div class="col-sm-4">
+                            <strong>Fine:</strong>
+                            <span th:text="${matchday.endAt != null ? #temporals.format(matchday.endAt, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                        </div>
+                        <div class="col-sm-4">
+                            <strong>Deadline:</strong>
+                            <span th:text="${matchday.deadlineOverride != null ? #temporals.format(matchday.deadlineOverride, 'dd/MM/yyyy HH:mm') : '—'}"></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

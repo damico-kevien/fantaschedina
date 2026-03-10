@@ -11,4 +11,6 @@ public interface FantaTeamRepository extends JpaRepository<FantaTeam, Long> {
     List<FantaTeam> findByLeagueId(Long leagueId);
 
     Optional<FantaTeam> findByLeagueMembershipId(Long leagueMembershipId);
+
+    Optional<FantaTeam> findByLeagueIdAndName(Long leagueId, String name);
 }
