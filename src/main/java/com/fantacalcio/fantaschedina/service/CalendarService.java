@@ -11,9 +11,8 @@ import com.fantacalcio.fantaschedina.repository.MatchdayRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -29,18 +28,52 @@ public class CalendarService {
     private final MatchdayFixtureRepository matchdayFixtureRepository;
     private final FantaTeamRepository fantaTeamRepository;
 
-    public void importCsv(Long leagueId, MultipartFile file) {
+    /**
+     * Parses and validates the CSV, then imports.
+     * If overwrite=false and conflicting matchdays exist, returns their numbers without importing.
+     * If overwrite=true, deletes existing fixtures for conflicting matchdays before importing.
+     *
+     * @return list of conflicting matchday numbers; empty = import completed successfully
+     */
+    public List<Integer> importCsv(Long leagueId, byte[] csvBytes, boolean overwrite) {
         leagueRepository.findById(leagueId)
             .orElseThrow(() -> new IllegalArgumentException("Lega non trovata"));
 
         Map<String, Long> teamNameToId = fantaTeamRepository.findByLeagueId(leagueId).stream()
             .collect(Collectors.toMap(t -> t.getName(), t -> t.getId()));
 
+        Map<Integer, List<String[]>> grouped = parseCsv(csvBytes, teamNameToId);
+
+        List<Integer> conflicts = new ArrayList<>();
+        for (Integer number : grouped.keySet()) {
+            matchdayRepository.findByLeagueIdAndNumber(leagueId, number).ifPresent(md -> {
+                if (matchdayFixtureRepository.countByMatchdayId(md.getId()) > 0) {
+                    conflicts.add(number);
+                }
+            });
+        }
+
+        if (!conflicts.isEmpty() && !overwrite) {
+            return conflicts;
+        }
+
+        if (overwrite) {
+            for (Integer number : conflicts) {
+                matchdayRepository.findByLeagueIdAndNumber(leagueId, number).ifPresent(md ->
+                    matchdayFixtureRepository.deleteByMatchdayId(md.getId()));
+            }
+        }
+
+        persist(leagueId, grouped, teamNameToId);
+        return Collections.emptyList();
+    }
+
+    private Map<Integer, List<String[]>> parseCsv(byte[] csvBytes, Map<String, Long> teamNameToId) {
         Map<Integer, List<String[]>> grouped = new LinkedHashMap<>();
         List<String> errors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(new ByteArrayInputStream(csvBytes), StandardCharsets.UTF_8))) {
 
             String header = reader.readLine();
             if (header == null || !header.trim().equals("matchday_number,home_team,away_team")) {
@@ -75,14 +108,11 @@ public class CalendarService {
             throw new IllegalArgumentException("Errori nel CSV: " + String.join("; ", errors));
         }
 
-        // Validate team names
         Set<String> unknown = new LinkedHashSet<>();
         for (List<String[]> rows : grouped.values()) {
             for (String[] row : rows) {
-                String home = row[1].trim();
-                String away = row[2].trim();
-                if (!teamNameToId.containsKey(home)) unknown.add(home);
-                if (!teamNameToId.containsKey(away)) unknown.add(away);
+                if (!teamNameToId.containsKey(row[1].trim())) unknown.add(row[1].trim());
+                if (!teamNameToId.containsKey(row[2].trim())) unknown.add(row[2].trim());
             }
         }
         if (!unknown.isEmpty()) {
@@ -90,21 +120,10 @@ public class CalendarService {
                 "Squadre non trovate nella lega: " + String.join(", ", unknown));
         }
 
-        // Check for matchdays that already have fixtures
-        List<Integer> existing = new ArrayList<>();
-        for (Integer number : grouped.keySet()) {
-            matchdayRepository.findByLeagueIdAndNumber(leagueId, number).ifPresent(md -> {
-                if (matchdayFixtureRepository.countByMatchdayId(md.getId()) > 0) {
-                    existing.add(number);
-                }
-            });
-        }
-        if (!existing.isEmpty()) {
-            throw new IllegalArgumentException(
-                "Giornate con partite già caricate: " + existing + ". Rimuovere prima le partite esistenti.");
-        }
+        return grouped;
+    }
 
-        // Persist
+    private void persist(Long leagueId, Map<Integer, List<String[]>> grouped, Map<String, Long> teamNameToId) {
         for (Map.Entry<Integer, List<String[]>> entry : grouped.entrySet()) {
             Integer number = entry.getKey();
             Matchday matchday = matchdayRepository.findByLeagueIdAndNumber(leagueId, number)

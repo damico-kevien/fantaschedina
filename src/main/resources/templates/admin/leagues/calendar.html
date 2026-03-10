@@ -53,7 +53,8 @@
                 <div class="card-body">
                     <p class="text-muted small mb-3">
                         Formato richiesto: <code>matchday_number,home_team,away_team</code><br>
-                        I nomi delle squadre devono corrispondere esattamente ai FantaTeam della lega.
+                        I nomi delle squadre devono corrispondere esattamente ai FantaTeam della lega.<br>
+                        <a href="/samples/calendario-esempio.csv" class="small" download>Scarica CSV di esempio</a>
                     </p>
                     <form th:action="@{/admin/leagues/{id}/calendar/import(id=${league.id})}"
                           method="post" enctype="multipart/form-data">
@@ -182,6 +183,41 @@
     </div>
 </div>
 
+<!-- Modale conflitto sovrascrittura -->
+<div class="modal fade" id="overwriteModal" tabindex="-1" aria-labelledby="overwriteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="overwriteModalLabel">Giornate già esistenti</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Le seguenti giornate hanno già delle partite caricate:</p>
+                <ul th:if="${conflictMatchdays}" class="mb-2">
+                    <li th:each="n : ${conflictMatchdays}">Giornata <strong th:text="${n}"></strong></li>
+                </ul>
+                <p class="text-muted small mb-0">Vuoi sovrascrivere le partite esistenti con quelle del CSV appena caricato?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                <form th:action="@{/admin/leagues/{id}/calendar/import/confirm(id=${league.id})}"
+                      method="post" class="m-0">
+                    <input type="hidden" name="overwrite" value="false">
+                    <button type="submit" class="btn btn-outline-primary">Salta esistenti</button>
+                </form>
+                <form th:action="@{/admin/leagues/{id}/calendar/import/confirm(id=${league.id})}"
+                      method="post" class="m-0">
+                    <input type="hidden" name="overwrite" value="true">
+                    <button type="submit" class="btn btn-danger">Sovrascrivi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script th:if="${conflictMatchdays}">
+    new bootstrap.Modal(document.getElementById('overwriteModal')).show();
+</script>
 </body>
 </html>

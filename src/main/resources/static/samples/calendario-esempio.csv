@@ -1,0 +1,31 @@
+matchday_number,home_team,away_team
+1,Aquile Romane,Stella del Nord
+1,Rossoneri FC,Bianconeri United
+1,Partenopei FC,Viola FC
+1,Nerazzurri FC,Granata FC
+1,Giallorossi FC,Laziali FC
+1,Sampdoriani FC,Atalantini FC
+2,Stella del Nord,Rossoneri FC
+2,Bianconeri United,Partenopei FC
+2,Viola FC,Nerazzurri FC
+2,Granata FC,Giallorossi FC
+2,Laziali FC,Sampdoriani FC
+2,Atalantini FC,Aquile Romane
+3,Aquile Romane,Rossoneri FC
+3,Partenopei FC,Nerazzurri FC
+3,Granata FC,Laziali FC
+3,Sampdoriani FC,Stella del Nord
+3,Bianconeri United,Viola FC
+3,Giallorossi FC,Atalantini FC
+4,Nerazzurri FC,Aquile Romane
+4,Laziali FC,Partenopei FC
+4,Viola FC,Giallorossi FC
+4,Atalantini FC,Sampdoriani FC
+4,Rossoneri FC,Granata FC
+4,Stella del Nord,Bianconeri United
+5,Aquile Romane,Partenopei FC
+5,Bianconeri United,Nerazzurri FC
+5,Giallorossi FC,Granata FC
+5,Laziali FC,Atalantini FC
+5,Rossoneri FC,Sampdoriani FC
+5,Viola FC,Stella del Nord
