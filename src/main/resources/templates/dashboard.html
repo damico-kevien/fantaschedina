@@ -22,7 +22,34 @@
 </nav>
 
 <div class="container mt-4">
-    <h4>Benvenuto, <span sec:authentication="name"></span>!</h4>
+    <h4 class="mb-4">Le mie leghe</h4>
+
+    <div th:if="${#lists.isEmpty(leagueCards)}" class="alert alert-info">
+        Non sei ancora iscritto a nessuna lega. Attendi un invito dall'amministratore.
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4" th:each="card : ${leagueCards}">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${card.league.name}"></h5>
+                    <p class="text-muted mb-1" th:text="${card.league.season}"></p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="fw-bold">
+                            Crediti: <span th:text="${card.membership.balance}"></span>
+                        </span>
+                        <span class="badge"
+                              th:classappend="${card.league.status.name() == 'ACTIVE'} ? 'bg-success' : (${card.league.status.name() == 'SETUP'} ? 'bg-warning text-dark' : 'bg-secondary')"
+                              th:text="${card.league.status}"></span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a th:href="@{/leagues/{id}/matchdays(id=${card.league.id})}"
+                       class="btn btn-primary btn-sm w-100">Vai alle giornate</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
