@@ -1,0 +1,84 @@
+package com.fantacalcio.fantaschedina.controller.admin;
+
+import com.fantacalcio.fantaschedina.domain.entity.BetSlip;
+import com.fantacalcio.fantaschedina.domain.entity.BetPick;
+import com.fantacalcio.fantaschedina.domain.entity.Matchday;
+import com.fantacalcio.fantaschedina.dto.BetSlipRequest;
+import com.fantacalcio.fantaschedina.repository.LeagueRepository;
+import com.fantacalcio.fantaschedina.repository.MatchdayFixtureRepository;
+import com.fantacalcio.fantaschedina.repository.MatchdayRepository;
+import com.fantacalcio.fantaschedina.service.AdminBetSlipService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping("/admin/leagues/{leagueId}")
+@RequiredArgsConstructor
+public class AdminBetSlipController {
+
+    private final AdminBetSlipService adminBetSlipService;
+    private final MatchdayRepository matchdayRepository;
+    private final MatchdayFixtureRepository matchdayFixtureRepository;
+    private final LeagueRepository leagueRepository;
+    private final com.fantacalcio.fantaschedina.repository.UserRepository userRepository;
+
+    @GetMapping("/matchdays/{matchdayId}/slips")
+    public String listSlips(@PathVariable Long leagueId,
+                            @PathVariable Long matchdayId,
+                            Model model) {
+        Matchday matchday = matchdayRepository.findById(matchdayId).orElseThrow();
+        List<BetSlip> slips = adminBetSlipService.getSlipsForMatchday(matchdayId);
+        Map<Long, String> teamNames = adminBetSlipService.getTeamNamesForSlips(slips);
+
+        model.addAttribute("league", leagueRepository.findById(leagueId).orElseThrow());
+        model.addAttribute("matchday", matchday);
+        model.addAttribute("slips", slips);
+        model.addAttribute("teamNames", teamNames);
+        return "admin/leagues/slip-list";
+    }
+
+    @GetMapping("/slips/{slipId}/edit")
+    public String editForm(@PathVariable Long leagueId,
+                           @PathVariable Long slipId,
+                           Model model) {
+        BetSlip slip = adminBetSlipService.getSlip(slipId);
+        Matchday matchday = matchdayRepository.findById(slip.getMatchdayId()).orElseThrow();
+        Map<Long, BetPick> picksByFixture = adminBetSlipService.getPicksByFixture(slipId);
+
+        model.addAttribute("league", leagueRepository.findById(leagueId).orElseThrow());
+        model.addAttribute("matchday", matchday);
+        model.addAttribute("slip", slip);
+        model.addAttribute("pickSlots", adminBetSlipService.getPickSlots(leagueId));
+        model.addAttribute("fixtures", matchdayFixtureRepository.findByMatchdayId(matchday.getId()));
+        model.addAttribute("teamNames", adminBetSlipService.getTeamNames(leagueId));
+        model.addAttribute("currentPicks", adminBetSlipService.getPicksOrdered(slipId));
+        return "admin/leagues/slip-edit";
+    }
+
+    @PostMapping("/slips/{slipId}/edit")
+    public String saveEdit(@PathVariable Long leagueId,
+                           @PathVariable Long slipId,
+                           @ModelAttribute BetSlipRequest request,
+                           @RequestParam(required = false) String note,
+                           @AuthenticationPrincipal UserDetails userDetails,
+                           RedirectAttributes redirectAttributes) {
+        Long adminUserId = userRepository.findByUsername(userDetails.getUsername()).orElseThrow().getId();
+        BetSlip slip = adminBetSlipService.getSlip(slipId);
+
+        try {
+            adminBetSlipService.modifySlip(slipId, adminUserId, request, note);
+            redirectAttributes.addFlashAttribute("success", "Schedina modificata con successo.");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/leagues/" + leagueId + "/matchdays/" + slip.getMatchdayId() + "/slips";
+    }
+}
