@@ -102,6 +102,12 @@
                         </tbody>
                     </table>
 
+                    <!-- Link carica risultati (solo CLOSED) -->
+                    <div th:if="${matchday.status.name() == 'CLOSED'}" class="mb-3">
+                        <a th:href="@{/admin/leagues/{lid}/matchdays/{mid}/results(lid=${league.id},mid=${matchday.id})}"
+                           class="btn btn-warning btn-sm">Carica risultati</a>
+                    </div>
+
                     <!-- Aggiungi partita (solo SCHEDULED) -->
                     <form th:if="${matchday.status.name() == 'SCHEDULED'}"
                           th:action="@{/admin/leagues/{lid}/calendar/{mid}/fixture(lid=${league.id},mid=${matchday.id})}"
