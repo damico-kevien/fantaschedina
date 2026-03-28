@@ -102,6 +102,12 @@
                         </tbody>
                     </table>
 
+                    <!-- Link gestisci schedine (solo OPEN) -->
+                    <div th:if="${matchday.status.name() == 'OPEN'}" class="mb-3">
+                        <a th:href="@{/admin/leagues/{lid}/matchdays/{mid}/slips(lid=${league.id},mid=${matchday.id})}"
+                           class="btn btn-success btn-sm">Gestisci schedine</a>
+                    </div>
+
                     <!-- Link carica risultati (solo CLOSED) -->
                     <div th:if="${matchday.status.name() == 'CLOSED'}" class="mb-3">
                         <a th:href="@{/admin/leagues/{lid}/matchdays/{mid}/results(lid=${league.id},mid=${matchday.id})}"

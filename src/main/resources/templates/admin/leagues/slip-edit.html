@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Modifica schedina — Giornata ' + ${matchday.number}">Fantaschedina Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div th:replace="~{admin/fragments/navbar :: navbar}"></div>
+
+<div class="container mt-4" style="max-width: 680px;">
+
+    <div class="mb-4">
+        <a th:href="@{/admin/leagues/{lid}/matchdays/{mid}/slips(lid=${league.id},mid=${matchday.id})}"
+           class="text-muted small">← Schedine giornata <span th:text="${matchday.number}"></span></a>
+        <h4 class="mb-0 mt-1">Modifica schedina</h4>
+        <span class="text-muted" th:text="${league.name}"></span>
+    </div>
+
+    <div th:if="${#lists.isEmpty(pickSlots)}" class="alert alert-warning">
+        BetTemplate non configurato per questa lega.
+    </div>
+
+    <form th:unless="${#lists.isEmpty(pickSlots)}"
+          th:action="@{/admin/leagues/{lid}/slips/{sid}/edit(lid=${league.id},sid=${slip.id})}"
+          method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+        <div th:each="slot, slotStat : ${pickSlots}">
+
+            <div th:if="${slotStat.first or slot.template.outcomeType != pickSlots[__${slotStat.index - 1}__].template.outcomeType}"
+                 class="mt-3 mb-2">
+                <span class="badge bg-secondary"
+                      th:text="${slot.template.outcomeType.name() == 'RESULT_1X2'}    ? '1X2'           :
+                                (${slot.template.outcomeType.name() == 'DOUBLE_CHANCE'} ? 'Doppia Chance'  :
+                                (${slot.template.outcomeType.name() == 'GOAL_NOGOAL'}   ? 'Goal / No Goal' :
+                                                                                          'Over / Under'))">
+                </span>
+                <span th:if="${slot.template.outcomeType.name() == 'OVER_UNDER'}"
+                      class="text-muted ms-1 small"
+                      th:text="'(soglia ' + ${slot.template.overUnderThreshold} + ')'"></span>
+            </div>
+
+            <div class="card mb-2">
+                <div class="card-body py-2">
+
+                    <!-- Fixture select pre-compilato -->
+                    <select class="form-select form-select-sm mb-2"
+                            th:name="'picks[' + ${slot.index} + '].fixtureId'"
+                            required>
+                        <option value="">— Seleziona partita —</option>
+                        <option th:each="f : ${fixtures}"
+                                th:value="${f.id}"
+                                th:text="${teamNames[f.homeFantaTeamId]} + ' vs ' + ${teamNames[f.awayFantaTeamId]}"
+                                th:selected="${currentPicks[slot.index] != null and currentPicks[slot.index].matchdayFixtureId == f.id}">
+                        </option>
+                    </select>
+
+                    <input type="hidden"
+                           th:name="'picks[' + ${slot.index} + '].outcomeType'"
+                           th:value="${slot.template.outcomeType}">
+
+                    <div class="btn-group w-100" role="group">
+
+                        <th:block th:if="${slot.template.outcomeType.name() == 'RESULT_1X2'}">
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="1"  th:id="'p' + ${slot.index} + '_1'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == '1'}" required>
+                            <label class="btn btn-outline-primary btn-sm" th:for="'p' + ${slot.index} + '_1'">1</label>
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="X"  th:id="'p' + ${slot.index} + '_X'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == 'X'}">
+                            <label class="btn btn-outline-primary btn-sm" th:for="'p' + ${slot.index} + '_X'">X</label>
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="2"  th:id="'p' + ${slot.index} + '_2'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == '2'}">
+                            <label class="btn btn-outline-primary btn-sm" th:for="'p' + ${slot.index} + '_2'">2</label>
+                        </th:block>
+
+                        <th:block th:if="${slot.template.outcomeType.name() == 'DOUBLE_CHANCE'}">
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="1X" th:id="'p' + ${slot.index} + '_1X'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == '1X'}" required>
+                            <label class="btn btn-outline-success btn-sm" th:for="'p' + ${slot.index} + '_1X'">1X</label>
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="12" th:id="'p' + ${slot.index} + '_12'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == '12'}">
+                            <label class="btn btn-outline-success btn-sm" th:for="'p' + ${slot.index} + '_12'">12</label>
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="X2" th:id="'p' + ${slot.index} + '_X2'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == 'X2'}">
+                            <label class="btn btn-outline-success btn-sm" th:for="'p' + ${slot.index} + '_X2'">X2</label>
+                        </th:block>
+
+                        <th:block th:if="${slot.template.outcomeType.name() == 'GOAL_NOGOAL'}">
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="GG" th:id="'p' + ${slot.index} + '_GG'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == 'GG'}" required>
+                            <label class="btn btn-outline-warning btn-sm" th:for="'p' + ${slot.index} + '_GG'">GG</label>
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="NG" th:id="'p' + ${slot.index} + '_NG'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == 'NG'}">
+                            <label class="btn btn-outline-warning btn-sm" th:for="'p' + ${slot.index} + '_NG'">NG</label>
+                        </th:block>
+
+                        <th:block th:if="${slot.template.outcomeType.name() == 'OVER_UNDER'}">
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="OVER"  th:id="'p' + ${slot.index} + '_OVER'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == 'OVER'}" required>
+                            <label class="btn btn-outline-danger btn-sm" th:for="'p' + ${slot.index} + '_OVER'">Over</label>
+                            <input type="radio" class="btn-check" th:name="'picks[' + ${slot.index} + '].pickedOutcome'" value="UNDER" th:id="'p' + ${slot.index} + '_UNDER'"
+                                   th:checked="${currentPicks[slot.index] != null and currentPicks[slot.index].pickedOutcome == 'UNDER'}">
+                            <label class="btn btn-outline-danger btn-sm" th:for="'p' + ${slot.index} + '_UNDER'">Under</label>
+                        </th:block>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Nota opzionale -->
+        <div class="mt-3 mb-4">
+            <label class="form-label form-label-sm">Nota (opzionale)</label>
+            <input type="text" class="form-control form-control-sm" name="note"
+                   placeholder="Motivo della modifica">
+        </div>
+
+        <div class="d-grid mb-5">
+            <button type="submit" class="btn btn-warning">Salva modifiche</button>
+        </div>
+
+    </form>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
