@@ -1,7 +1,7 @@
 package com.fantacalcio.fantaschedina.controller;
 
 import com.fantacalcio.fantaschedina.repository.UserRepository;
-import com.fantacalcio.fantaschedina.service.MatchdayService;
+import com.fantacalcio.fantaschedina.service.UserDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
 
     private final UserRepository userRepository;
-    private final MatchdayService matchdayService;
+    private final UserDashboardService userDashboardService;
 
     @GetMapping("/")
     public String root(Authentication authentication) {
@@ -30,7 +30,7 @@ public class HomeController {
             return "redirect:/admin/dashboard";
         }
         Long userId = userRepository.findByUsername(authentication.getName()).orElseThrow().getId();
-        model.addAttribute("leagueCards", matchdayService.getLeaguesForUser(userId));
+        model.addAttribute("leagueCards", userDashboardService.buildCards(userId));
         return "dashboard";
     }
 }
