@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -49,10 +48,17 @@ public class UserMatchdayController {
                         m -> matchdayService.effectiveDeadline(m, league.getBetDeadlineMinutes())
                 ));
 
+        FantaTeam myTeam = matchdayService.getFantaTeam(leagueId, userId).orElse(null);
+        Map<Long, BetSlip> slipsByMatchday = myTeam != null
+                ? betService.findSlipsForTeam(myTeam.getId()).stream()
+                        .collect(Collectors.toMap(BetSlip::getMatchdayId, s -> s))
+                : Map.of();
+
         model.addAttribute("league", league);
         model.addAttribute("matchdays", matchdays);
         model.addAttribute("deadlines", deadlines);
-        model.addAttribute("myTeam", matchdayService.getFantaTeam(leagueId, userId).orElse(null));
+        model.addAttribute("myTeam", myTeam);
+        model.addAttribute("slipsByMatchday", slipsByMatchday);
 
         return "user/matchday-list";
     }
@@ -82,6 +88,8 @@ public class UserMatchdayController {
         FantaTeam myTeam = matchdayService.getFantaTeam(leagueId, userId).orElse(null);
         BetSlip mySlip = myTeam != null ? betService.findSlip(myTeam.getId(), matchdayId) : null;
         List<BetPick> myPicks = mySlip != null ? betService.findPicks(mySlip.getId()) : List.of();
+        Map<Long, BetPick> picksByFixture = myPicks.stream()
+                .collect(Collectors.toMap(BetPick::getMatchdayFixtureId, p -> p));
 
         model.addAttribute("league", league);
         model.addAttribute("matchday", matchday);
@@ -91,6 +99,7 @@ public class UserMatchdayController {
         model.addAttribute("myTeam", myTeam);
         model.addAttribute("mySlip", mySlip);
         model.addAttribute("myPicks", myPicks);
+        model.addAttribute("picksByFixture", picksByFixture);
 
         return "user/matchday-detail";
     }
