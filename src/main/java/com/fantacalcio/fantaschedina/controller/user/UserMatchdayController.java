@@ -1,9 +1,8 @@
 package com.fantacalcio.fantaschedina.controller.user;
 
-import com.fantacalcio.fantaschedina.domain.entity.League;
-import com.fantacalcio.fantaschedina.domain.entity.Matchday;
-import com.fantacalcio.fantaschedina.domain.entity.MatchdayFixture;
+import com.fantacalcio.fantaschedina.domain.entity.*;
 import com.fantacalcio.fantaschedina.repository.UserRepository;
+import com.fantacalcio.fantaschedina.service.BetService;
 import com.fantacalcio.fantaschedina.service.MatchdayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class UserMatchdayController {
 
     private final MatchdayService matchdayService;
+    private final BetService betService;
     private final UserRepository userRepository;
 
     private Long userId(Authentication auth) {
@@ -78,12 +79,18 @@ public class UserMatchdayController {
         Map<Long, String> teamNames = matchdayService.getTeamNames(leagueId);
         LocalDateTime deadline = matchdayService.effectiveDeadline(matchday, league.getBetDeadlineMinutes());
 
+        FantaTeam myTeam = matchdayService.getFantaTeam(leagueId, userId).orElse(null);
+        BetSlip mySlip = myTeam != null ? betService.findSlip(myTeam.getId(), matchdayId) : null;
+        List<BetPick> myPicks = mySlip != null ? betService.findPicks(mySlip.getId()) : List.of();
+
         model.addAttribute("league", league);
         model.addAttribute("matchday", matchday);
         model.addAttribute("fixtures", fixtures);
         model.addAttribute("teamNames", teamNames);
         model.addAttribute("deadline", deadline);
-        model.addAttribute("myTeam", matchdayService.getFantaTeam(leagueId, userId).orElse(null));
+        model.addAttribute("myTeam", myTeam);
+        model.addAttribute("mySlip", mySlip);
+        model.addAttribute("myPicks", myPicks);
 
         return "user/matchday-detail";
     }
