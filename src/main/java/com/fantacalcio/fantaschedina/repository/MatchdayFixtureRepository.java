@@ -12,4 +12,6 @@ public interface MatchdayFixtureRepository extends JpaRepository<MatchdayFixture
     boolean existsByMatchdayIdAndResultLoadedFalse(Long matchdayId);
 
     long countByMatchdayId(Long matchdayId);
+
+    void deleteByMatchdayId(Long matchdayId);
 }
