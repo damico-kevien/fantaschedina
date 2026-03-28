@@ -27,6 +27,7 @@ public class CalendarService {
     private final MatchdayRepository matchdayRepository;
     private final MatchdayFixtureRepository matchdayFixtureRepository;
     private final FantaTeamRepository fantaTeamRepository;
+    private final MatchdayOpeningService matchdayOpeningService;
 
     /**
      * Parses and validates the CSV, then imports.
@@ -156,6 +157,9 @@ public class CalendarService {
         matchday.setEndAt(request.getEndAt());
         matchday.setDeadlineOverride(request.getDeadlineOverride());
         matchdayRepository.save(matchday);
+
+        // Trigger 1: open immediately if previous is PROCESSED (or absent)
+        matchdayOpeningService.tryOpen(matchday);
     }
 
     public Matchday addMatchday(Long leagueId, Integer number) {

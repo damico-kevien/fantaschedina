@@ -5,6 +5,7 @@ import com.fantacalcio.fantaschedina.domain.enums.*;
 import com.fantacalcio.fantaschedina.dto.BetPickRequest;
 import com.fantacalcio.fantaschedina.dto.BetSlipRequest;
 import com.fantacalcio.fantaschedina.repository.*;
+import com.fantacalcio.fantaschedina.util.OutcomeConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class BetService {
-
-    private static final Map<OutcomeType, Set<String>> VALID_OUTCOMES = Map.of(
-            OutcomeType.RESULT_1X2,    Set.of("1", "X", "2"),
-            OutcomeType.DOUBLE_CHANCE, Set.of("1X", "12", "X2"),
-            OutcomeType.GOAL_NOGOAL,   Set.of("GG", "NG"),
-            OutcomeType.OVER_UNDER,    Set.of("OVER", "UNDER")
-    );
 
     private final BetSlipRepository betSlipRepository;
     private final BetPickRepository betPickRepository;
@@ -128,7 +122,7 @@ public class BetService {
             if (!validFixtureIds.contains(pick.getFixtureId())) {
                 throw new IllegalArgumentException("Una partita selezionata non appartiene a questa giornata.");
             }
-            Set<String> valid = VALID_OUTCOMES.get(pick.getOutcomeType());
+            Set<String> valid = OutcomeConstants.VALID_OUTCOMES_SET.get(pick.getOutcomeType());
             if (valid == null || !valid.contains(pick.getPickedOutcome())) {
                 throw new IllegalArgumentException("Esito non valido: " + pick.getPickedOutcome());
             }
