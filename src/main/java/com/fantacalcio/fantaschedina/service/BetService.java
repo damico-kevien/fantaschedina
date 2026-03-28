@@ -174,6 +174,11 @@ public class BetService {
     }
 
     @Transactional(readOnly = true)
+    public List<BetSlip> findSlipsForTeam(Long fantaTeamId) {
+        return betSlipRepository.findByFantaTeamId(fantaTeamId);
+    }
+
+    @Transactional(readOnly = true)
     public List<BetPick> findPicks(Long betSlipId) {
         return betPickRepository.findByBetSlipId(betSlipId);
     }

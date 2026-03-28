@@ -77,7 +77,7 @@
     </div>
 
     <!-- Dettaglio schedina inviata -->
-    <div th:if="${mySlip != null}" class="mt-4">
+    <div th:if="${mySlip != null}" class="mt-4" id="schedina">
         <h5 class="mb-3">La tua schedina</h5>
         <div class="table-responsive">
             <table class="table table-sm table-bordered align-middle">
@@ -127,6 +127,7 @@
                     <th class="text-end">Casa</th>
                     <th class="text-center" style="width: 80px;">Risultato</th>
                     <th>Trasferta</th>
+                    <th th:if="${mySlip != null}" class="text-center" style="width: 80px;">Esito</th>
                 </tr>
             </thead>
             <tbody>
@@ -139,6 +140,15 @@
                         <span th:unless="${fixture.resultLoaded}" class="text-muted">vs</span>
                     </td>
                     <td class="fw-semibold" th:text="${teamNames[fixture.awayFantaTeamId]}"></td>
+                    <td th:if="${mySlip != null}" class="text-center"
+                        th:with="pick=${picksByFixture[fixture.id]}">
+                        <span th:if="${pick != null}" class="badge"
+                              th:classappend="${pick.isCorrect == null}  ? 'bg-warning text-dark' :
+                                              (${pick.isCorrect == true} ? 'bg-success' : 'bg-danger')"
+                              th:text="${pick.pickedOutcome}">
+                        </span>
+                        <span th:unless="${pick != null}" class="text-muted">—</span>
+                    </td>
                 </tr>
             </tbody>
         </table>
