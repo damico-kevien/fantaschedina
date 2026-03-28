@@ -29,23 +29,76 @@
     </div>
 
     <div class="row g-3">
-        <div class="col-md-4" th:each="card : ${leagueCards}">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title" th:text="${card.league.name}"></h5>
-                    <p class="text-muted mb-1" th:text="${card.league.season}"></p>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
-                        <span class="fw-bold">
-                            Crediti: <span th:text="${card.membership.balance}"></span>
-                        </span>
-                        <span class="badge"
-                              th:classappend="${card.league.status.name() == 'ACTIVE'} ? 'bg-success' : (${card.league.status.name() == 'SETUP'} ? 'bg-warning text-dark' : 'bg-secondary')"
-                              th:text="${card.league.status}"></span>
-                    </div>
+        <div class="col-md-6" th:each="card : ${leagueCards}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold" th:text="${card.league.name}"></span>
+                    <span class="text-muted small" th:text="${card.league.season}"></span>
                 </div>
-                <div class="card-footer bg-transparent">
+                <div class="card-body">
+
+                    <!-- Giornata corrente -->
+                    <div th:if="${card.currentMatchday != null}" class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted text-uppercase fw-semibold">Giornata corrente</span>
+                            <span class="badge"
+                                  th:text="${card.currentMatchday.status}"
+                                  th:classappend="${card.currentMatchday.status.name() == 'OPEN'} ? 'bg-success' :
+                                                  (${card.currentMatchday.status.name() == 'CLOSED'} ? 'bg-warning text-dark' :
+                                                  'bg-secondary')">
+                            </span>
+                        </div>
+                        <div class="fw-semibold" th:text="'Giornata ' + ${card.currentMatchday.number}"></div>
+
+                        <!-- Deadline -->
+                        <div th:if="${card.effectiveDeadline != null}" class="text-muted small mt-1">
+                            <span th:if="${!card.deadlinePassed()}">
+                                Scadenza: <strong th:text="${#temporals.format(card.effectiveDeadline, 'dd/MM HH:mm')}"></strong>
+                                — <span class="countdown fw-bold text-success"
+                                        th:data-deadline="${#temporals.format(card.effectiveDeadline, 'yyyy-MM-dd''T''HH:mm:ss')}"></span>
+                            </span>
+                            <span th:if="${card.deadlinePassed()}" class="text-danger">Deadline scaduta</span>
+                        </div>
+                    </div>
+                    <div th:if="${card.currentMatchday == null}" class="text-muted small fst-italic mb-3">
+                        Nessuna giornata attiva
+                    </div>
+
+                    <!-- Stato schedina -->
+                    <div th:if="${card.isMatchdayOpen()}" class="mb-3">
+                        <span class="small text-muted text-uppercase fw-semibold">Schedina</span>
+                        <div class="mt-1">
+                            <span th:if="${card.currentSlip != null}"
+                                  class="badge bg-success">Inviata</span>
+                            <span th:if="${card.currentSlip == null and !card.deadlinePassed()}"
+                                  class="badge bg-warning text-dark">Da giocare</span>
+                            <span th:if="${card.currentSlip == null and card.deadlinePassed()}"
+                                  class="badge bg-secondary">Non giocata</span>
+                        </div>
+                    </div>
+
+                    <!-- Crediti e Jackpot -->
+                    <div class="d-flex gap-4 mt-2">
+                        <div>
+                            <div class="small text-muted text-uppercase fw-semibold">Crediti</div>
+                            <div class="fw-bold" th:text="${card.membership.balance} + ' cr'"></div>
+                        </div>
+                        <div th:if="${card.jackpot != null}">
+                            <div class="small text-muted text-uppercase fw-semibold">Jackpot</div>
+                            <div class="fw-bold" th:text="${card.jackpot} + ' cr'"></div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="card-footer bg-transparent d-flex gap-2">
+                    <!-- CTA principale -->
+                    <a th:if="${card.canPlay()}"
+                       th:href="@{/leagues/{lid}/matchdays/{mid}/bet(lid=${card.league.id},mid=${card.currentMatchday.id})}"
+                       class="btn btn-primary btn-sm">Gioca ora</a>
                     <a th:href="@{/leagues/{id}/matchdays(id=${card.league.id})}"
-                       class="btn btn-primary btn-sm w-100">Vai alle giornate</a>
+                       class="btn btn-outline-secondary btn-sm">Giornate</a>
+                    <a th:href="@{/leagues/{id}/history(id=${card.league.id})}"
+                       class="btn btn-outline-secondary btn-sm">Storico</a>
                 </div>
             </div>
         </div>
@@ -53,5 +106,20 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.querySelectorAll('.countdown').forEach(el => {
+        const deadline = new Date(el.dataset.deadline).getTime();
+        function update() {
+            const diff = deadline - Date.now();
+            if (diff <= 0) { el.textContent = ''; return; }
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            el.textContent = `(${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s)`;
+        }
+        update();
+        setInterval(update, 1000);
+    });
+</script>
 </body>
 </html>
