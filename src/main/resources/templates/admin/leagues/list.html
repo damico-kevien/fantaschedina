@@ -45,7 +45,7 @@
                         <td th:text="${league.matchdayCost} + ' cr'"></td>
                         <td>
                             <span class="badge"
-                                  th:text="${league.status}"
+                                  th:text="${league.status.label}"
                                   th:classappend="${league.status.name() == 'ACTIVE' ? 'bg-success' : (league.status.name() == 'SETUP' ? 'bg-warning text-dark' : 'bg-secondary')}">
                             </span>
                         </td>

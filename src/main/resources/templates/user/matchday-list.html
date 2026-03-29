@@ -35,7 +35,7 @@
             <h4 class="mb-0" th:text="${league.name}"></h4>
             <span class="badge"
                   th:classappend="${league.status.name() == 'ACTIVE'} ? 'bg-success' : (${league.status.name() == 'SETUP'} ? 'bg-warning text-dark' : 'bg-secondary')"
-                  th:text="${league.status}"></span>
+                  th:text="${league.status.label}"></span>
         </div>
         <a th:href="@{/leagues/{id}/history(id=${league.id})}" class="btn btn-outline-secondary btn-sm">Storico</a>
     </div>
@@ -43,6 +43,15 @@
     <p class="mb-4" th:if="${myTeam != null}">
         La tua squadra: <strong th:text="${myTeam.name}"></strong>
     </p>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 
     <div th:if="${#lists.isEmpty(matchdays)}" class="alert alert-info">
         Nessuna giornata disponibile.
@@ -61,7 +70,7 @@
                                        (${md.status.name() == 'PROCESSED'} ? 'bg-secondary' :
                                        (${md.status.name() == 'RESULTS_LOADED'} ? 'bg-info text-dark' :
                                        (${md.status.name() == 'CLOSED'} ? 'bg-danger' : 'bg-warning text-dark')))"
-                      th:text="${md.status}"></span>
+                      th:text="${md.status.label}"></span>
                 <div class="text-muted small mt-1" th:if="${deadlines.containsKey(md.id)}">
                     Scadenza: <span th:text="${#temporals.format(deadlines[md.id], 'dd/MM/yyyy HH:mm')}"></span>
                 </div>
@@ -75,7 +84,7 @@
                       th:classappend="${slip.status.name() == 'WON'}   ? 'bg-success' :
                                        (${slip.status.name() == 'LOST'}  ? 'bg-danger'  :
                                        (${slip.status.name() == 'VOID'}  ? 'bg-secondary' : 'bg-warning text-dark'))"
-                      th:text="${slip.status}"></span>
+                      th:text="${slip.status.label}"></span>
                 <span class="text-muted">&rsaquo;</span>
             </div>
         </a>

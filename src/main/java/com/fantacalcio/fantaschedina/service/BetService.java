@@ -29,6 +29,7 @@ public class BetService {
     private final FantaTeamRepository fantaTeamRepository;
     private final CreditTransactionRepository creditTransactionRepository;
     private final LeagueRepository leagueRepository;
+    private final JackpotRepository jackpotRepository;
     private final MatchdayService matchdayService;
 
     /**
@@ -105,6 +106,10 @@ public class BetService {
                 .note("Schedina giornata " + matchday.getNumber())
                 .build());
 
+        Jackpot jackpot = jackpotRepository.findByLeagueId(leagueId).orElseThrow();
+        jackpot.setCurrentAmount(jackpot.getCurrentAmount() + league.getMatchdayCost());
+        jackpotRepository.save(jackpot);
+
         return slip;
     }
 
@@ -175,5 +180,22 @@ public class BetService {
     @Transactional(readOnly = true)
     public List<BetPick> findPicks(Long betSlipId) {
         return betPickRepository.findByBetSlipId(betSlipId);
+    }
+
+    /**
+     * Returns the slip only if it belongs to the user's team in the given league.
+     * Returns null if the slip doesn't exist or the user has no team.
+     * Throws IllegalArgumentException if the slip exists but belongs to another team.
+     */
+    @Transactional(readOnly = true)
+    public BetSlip findSlipForUser(Long slipId, Long leagueId, Long userId) {
+        BetSlip slip = betSlipRepository.findById(slipId).orElse(null);
+        if (slip == null) return null;
+
+        FantaTeam myTeam = matchdayService.getFantaTeam(leagueId, userId).orElse(null);
+        if (myTeam == null || !slip.getFantaTeamId().equals(myTeam.getId())) {
+            throw new IllegalArgumentException("Accesso non autorizzato alla schedina.");
+        }
+        return slip;
     }
 }

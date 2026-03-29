@@ -80,7 +80,7 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span class="fw-semibold">Giornata <span th:text="${matchday.number}"></span></span>
                     <span class="badge"
-                          th:text="${matchday.status}"
+                          th:text="${matchday.status.label}"
                           th:classappend="${matchday.status.name() == 'SCHEDULED'} ? 'bg-warning text-dark' :
                                           (${matchday.status.name() == 'OPEN'} ? 'bg-success' :
                                           (${matchday.status.name() == 'PROCESSED'} ? 'bg-secondary' : 'bg-primary'))">

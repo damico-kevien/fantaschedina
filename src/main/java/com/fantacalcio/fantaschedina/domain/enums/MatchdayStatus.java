@@ -1,9 +1,19 @@
 package com.fantacalcio.fantaschedina.domain.enums;
 
 public enum MatchdayStatus {
-    SCHEDULED,
-    OPEN,
-    CLOSED,
-    RESULTS_LOADED,
-    PROCESSED
+    SCHEDULED("In programma"),
+    OPEN("Aperta"),
+    CLOSED("Chiusa"),
+    RESULTS_LOADED("Risultati caricati"),
+    PROCESSED("Elaborata");
+
+    private final String label;
+
+    MatchdayStatus(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
 }

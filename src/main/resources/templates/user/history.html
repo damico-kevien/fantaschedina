@@ -80,7 +80,7 @@
                                       th:classappend="${slip.status.name() == 'WON'}     ? 'bg-success' :
                                                        (${slip.status.name() == 'LOST'}   ? 'bg-danger'  :
                                                        (${slip.status.name() == 'VOID'}   ? 'bg-secondary' : 'bg-warning text-dark'))"
-                                      th:text="${slip.status}"></span>
+                                      th:text="${slip.status.label}"></span>
                                 <span th:if="${slip.isAutoSubmitted}" class="ms-1 badge bg-light text-dark border">Auto</span>
                             </td>
                             <td class="text-center text-danger" th:text="'-' + ${slip.amountCharged}"></td>
@@ -121,7 +121,7 @@
                                       th:classappend="${tx.type.name() == 'WIN_CREDIT'}      ? 'bg-success' :
                                                        (${tx.type.name() == 'INITIAL_DEPOSIT'} ? 'bg-info text-dark' :
                                                        (${tx.type.name() == 'ADMIN_ADJUST'}    ? 'bg-warning text-dark' : 'bg-secondary'))"
-                                      th:text="${tx.type}"></span>
+                                      th:text="${tx.type.label}"></span>
                             </td>
                             <td class="text-end fw-bold"
                                 th:classappend="${tx.amount >= 0} ? 'text-success' : 'text-danger'"

@@ -50,6 +50,11 @@ public class InviteService {
     }
 
     @Transactional(readOnly = true)
+    public List<Invite> findAll() {
+        return inviteRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public Invite findValidInvite(String token) {
         Invite invite = inviteRepository.findByToken(token)
             .orElseThrow(() -> new InvalidInviteException("Token non valido o inesistente"));

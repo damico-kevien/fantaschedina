@@ -30,7 +30,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-semibold small text-muted text-uppercase">Giornata corrente</span>
                             <span class="badge"
-                                  th:text="${card.currentMatchday.status}"
+                                  th:text="${card.currentMatchday.status.label}"
                                   th:classappend="${card.currentMatchday.status.name() == 'OPEN'} ? 'bg-success' :
                                                   (${card.currentMatchday.status.name() == 'CLOSED'} ? 'bg-warning text-dark' :
                                                   'bg-secondary')">

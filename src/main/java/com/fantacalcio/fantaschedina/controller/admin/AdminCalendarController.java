@@ -1,11 +1,9 @@
 package com.fantacalcio.fantaschedina.controller.admin;
 
-import com.fantacalcio.fantaschedina.domain.entity.FantaTeam;
-import com.fantacalcio.fantaschedina.domain.entity.Matchday;
 import com.fantacalcio.fantaschedina.dto.MatchdayScheduleRequest;
-import com.fantacalcio.fantaschedina.repository.FantaTeamRepository;
-import com.fantacalcio.fantaschedina.repository.LeagueRepository;
 import com.fantacalcio.fantaschedina.service.CalendarService;
+import com.fantacalcio.fantaschedina.service.LeagueService;
+import com.fantacalcio.fantaschedina.service.MatchdayService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -15,8 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/leagues/{leagueId}/calendar")
@@ -24,28 +20,21 @@ import java.util.stream.Collectors;
 public class AdminCalendarController {
 
     private final CalendarService calendarService;
-    private final LeagueRepository leagueRepository;
-    private final FantaTeamRepository fantaTeamRepository;
+    private final LeagueService leagueService;
+    private final MatchdayService matchdayService;
+
+    private static final String SESSION_KEY = "pendingCsvImport";
 
     @GetMapping
     public String calendar(@PathVariable Long leagueId, Model model) {
-        var league = leagueRepository.findById(leagueId)
-            .orElseThrow(() -> new IllegalArgumentException("Lega non trovata"));
+        var matchdays = calendarService.findMatchdaysByLeague(leagueId);
 
-        List<Matchday> matchdays = calendarService.findMatchdaysByLeague(leagueId);
-        var fixturesByMatchday = calendarService.findFixturesGroupedByMatchday(matchdays);
-
-        Map<Long, String> teamNames = fantaTeamRepository.findByLeagueId(leagueId).stream()
-            .collect(Collectors.toMap(FantaTeam::getId, FantaTeam::getName));
-
-        model.addAttribute("league", league);
+        model.addAttribute("league", leagueService.findById(leagueId));
         model.addAttribute("matchdays", matchdays);
-        model.addAttribute("fixturesByMatchday", fixturesByMatchday);
-        model.addAttribute("teamNames", teamNames);
+        model.addAttribute("fixturesByMatchday", calendarService.findFixturesGroupedByMatchday(matchdays));
+        model.addAttribute("teamNames", matchdayService.getTeamNames(leagueId));
         return "admin/leagues/calendar";
     }
-
-    private static final String SESSION_KEY = "pendingCsvImport";
 
     @PostMapping("/import")
     public String importCsv(@PathVariable Long leagueId,
