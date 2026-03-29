@@ -5,12 +5,14 @@ import com.fantacalcio.fantaschedina.domain.enums.*;
 import com.fantacalcio.fantaschedina.repository.*;
 import com.fantacalcio.fantaschedina.util.OutcomeConstants;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AutoSubmitService {
@@ -24,6 +26,7 @@ public class AutoSubmitService {
     private final LeagueMembershipRepository leagueMembershipRepository;
     private final CreditTransactionRepository creditTransactionRepository;
     private final LeagueRepository leagueRepository;
+    private final JackpotRepository jackpotRepository;
 
     @Transactional
     public void autoSubmitMissing(Long matchdayId) {
@@ -33,6 +36,13 @@ public class AutoSubmitService {
         List<MatchdayFixture> fixtures = matchdayFixtureRepository.findByMatchdayId(matchdayId);
         List<BetTemplate> templates = betTemplateRepository.findByLeagueIdOrderByOrderIndexAsc(league.getId());
         List<FantaTeam> allTeams = fantaTeamRepository.findByLeagueId(league.getId());
+
+        int totalRequiredPicks = templates.stream().mapToInt(BetTemplate::getRequiredCount).sum();
+        if (fixtures.size() != totalRequiredPicks) {
+            log.error("Auto-submit skipped for matchday {}: fixture count ({}) != required picks ({})",
+                    matchdayId, fixtures.size(), totalRequiredPicks);
+            return;
+        }
 
         Random random = new Random();
 
@@ -54,7 +64,6 @@ public class AutoSubmitService {
                     .amountCharged(league.getMatchdayCost())
                     .build());
 
-            // Shuffle fixtures so each template slot gets a different fixture
             List<MatchdayFixture> shuffled = new ArrayList<>(fixtures);
             Collections.shuffle(shuffled, random);
             int fixtureIdx = 0;
@@ -62,7 +71,7 @@ public class AutoSubmitService {
             for (BetTemplate template : templates) {
                 List<String> validOutcomes = OutcomeConstants.VALID_OUTCOMES.get(template.getOutcomeType());
                 for (int i = 0; i < template.getRequiredCount(); i++) {
-                    MatchdayFixture fixture = shuffled.get(fixtureIdx % shuffled.size());
+                    MatchdayFixture fixture = shuffled.get(fixtureIdx);
                     fixtureIdx++;
                     String picked = validOutcomes.get(random.nextInt(validOutcomes.size()));
                     betPickRepository.save(BetPick.builder()
@@ -87,6 +96,10 @@ public class AutoSubmitService {
                     .createdAt(LocalDateTime.now())
                     .note("Auto-submit giornata " + matchday.getNumber())
                     .build());
+
+            Jackpot jackpot = jackpotRepository.findByLeagueId(league.getId()).orElseThrow();
+            jackpot.setCurrentAmount(jackpot.getCurrentAmount() + league.getMatchdayCost());
+            jackpotRepository.save(jackpot);
         }
     }
 }

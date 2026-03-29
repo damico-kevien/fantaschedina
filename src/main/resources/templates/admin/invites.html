@@ -78,7 +78,7 @@
                                 <td th:text="${invite.email}"></td>
                                 <td th:text="${leagueNames[invite.leagueId]}"></td>
                                 <td>
-                                    <span th:text="${invite.status}"
+                                    <span th:text="${invite.status.label}"
                                           th:classappend="${invite.status.name() == 'PENDING' ? 'bg-warning text-dark' : (invite.status.name() == 'USED' ? 'bg-success' : 'bg-secondary')}"
                                           class="badge">
                                     </span>

@@ -22,6 +22,16 @@
 </nav>
 
 <div class="container mt-4">
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <h4 class="mb-4">Le mie leghe</h4>
 
     <div th:if="${#lists.isEmpty(leagueCards)}" class="alert alert-info">
@@ -42,7 +52,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="small text-muted text-uppercase fw-semibold">Giornata corrente</span>
                             <span class="badge"
-                                  th:text="${card.currentMatchday.status}"
+                                  th:text="${card.currentMatchday.status.label}"
                                   th:classappend="${card.currentMatchday.status.name() == 'OPEN'} ? 'bg-success' :
                                                   (${card.currentMatchday.status.name() == 'CLOSED'} ? 'bg-warning text-dark' :
                                                   'bg-secondary')">

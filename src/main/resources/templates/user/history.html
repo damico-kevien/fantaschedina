@@ -80,7 +80,7 @@
                                       th:classappend="${slip.status.name() == 'WON'}     ? 'bg-success' :
                                                        (${slip.status.name() == 'LOST'}   ? 'bg-danger'  :
                                                        (${slip.status.name() == 'VOID'}   ? 'bg-secondary' : 'bg-warning text-dark'))"
-                                      th:text="${slip.status}"></span>
+                                      th:text="${slip.status.label}"></span>
                                 <span th:if="${slip.isAutoSubmitted}" class="ms-1 badge bg-light text-dark border">Auto</span>
                             </td>
                             <td class="text-center text-danger" th:text="'-' + ${slip.amountCharged}"></td>

@@ -1,9 +1,7 @@
 package com.fantacalcio.fantaschedina.controller.user;
 
 import com.fantacalcio.fantaschedina.domain.entity.*;
-import com.fantacalcio.fantaschedina.repository.MatchdayRepository;
 import com.fantacalcio.fantaschedina.repository.UserRepository;
-import com.fantacalcio.fantaschedina.repository.BetSlipRepository;
 import com.fantacalcio.fantaschedina.service.BetService;
 import com.fantacalcio.fantaschedina.service.MatchdayService;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +23,6 @@ public class BetSlipDetailController {
 
     private final BetService betService;
     private final MatchdayService matchdayService;
-    private final BetSlipRepository betSlipRepository;
-    private final MatchdayRepository matchdayRepository;
     private final UserRepository userRepository;
 
     @GetMapping("/{leagueId}/slips/{slipId}")
@@ -41,23 +37,23 @@ public class BetSlipDetailController {
             return "redirect:/dashboard";
         }
 
-        BetSlip slip = betSlipRepository.findById(slipId).orElse(null);
+        BetSlip slip;
+        try {
+            slip = betService.findSlipForUser(slipId, leagueId, userId);
+        } catch (IllegalArgumentException e) {
+            return "redirect:/leagues/" + leagueId + "/history";
+        }
         if (slip == null) {
             return "redirect:/leagues/" + leagueId + "/history";
         }
 
-        // Verify the slip belongs to the user's team in this league
-        FantaTeam myTeam = matchdayService.getFantaTeam(leagueId, userId).orElse(null);
-        if (myTeam == null || !slip.getFantaTeamId().equals(myTeam.getId())) {
-            return "redirect:/leagues/" + leagueId + "/history";
-        }
-
-        Matchday matchday = matchdayRepository.findById(slip.getMatchdayId()).orElseThrow();
+        Matchday matchday = matchdayService.getMatchday(slip.getMatchdayId(), leagueId);
         List<BetPick> picks = betService.findPicks(slipId);
         List<MatchdayFixture> fixtures = matchdayService.getFixtures(slip.getMatchdayId());
         Map<Long, String> teamNames = matchdayService.getTeamNames(leagueId);
         Map<Long, BetPick> picksByFixture = picks.stream()
                 .collect(Collectors.toMap(BetPick::getMatchdayFixtureId, p -> p));
+        FantaTeam myTeam = matchdayService.getFantaTeam(leagueId, userId).orElse(null);
 
         model.addAttribute("league", league);
         model.addAttribute("matchday", matchday);

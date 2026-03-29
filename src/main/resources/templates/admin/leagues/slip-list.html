@@ -47,7 +47,7 @@
                     <td th:text="${teamNames[slip.fantaTeamId]}"></td>
                     <td class="text-center">
                         <span class="badge"
-                              th:text="${slip.status}"
+                              th:text="${slip.status.label}"
                               th:classappend="${slip.status.name() == 'WON'} ? 'bg-success' :
                                               (${slip.status.name() == 'LOST'} ? 'bg-danger' :
                                               (${slip.status.name() == 'VOID'} ? 'bg-secondary' : 'bg-primary'))">

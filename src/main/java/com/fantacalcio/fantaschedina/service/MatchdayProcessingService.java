@@ -2,6 +2,8 @@ package com.fantacalcio.fantaschedina.service;
 
 import com.fantacalcio.fantaschedina.domain.entity.*;
 import com.fantacalcio.fantaschedina.domain.enums.*;
+import com.fantacalcio.fantaschedina.dto.FixtureResultRequest;
+import com.fantacalcio.fantaschedina.dto.MatchdayResultRequest;
 import com.fantacalcio.fantaschedina.repository.*;
 import com.fantacalcio.fantaschedina.util.OutcomeEvaluator;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,40 @@ public class MatchdayProcessingService {
     private final JackpotRepository jackpotRepository;
     private final LeagueRepository leagueRepository;
     private final MatchdayOpeningService matchdayOpeningService;
+
+    @Transactional
+    public Matchday loadResults(Long matchdayId, MatchdayResultRequest request) {
+        Matchday matchday = matchdayRepository.findById(matchdayId).orElseThrow();
+
+        if (matchday.getStatus() != MatchdayStatus.CLOSED) {
+            throw new IllegalStateException("La giornata non è in stato CLOSED.");
+        }
+
+        for (FixtureResultRequest f : request.getFixtures()) {
+            if (f.getHomeScore() == null || f.getAwayScore() == null) {
+                throw new IllegalArgumentException("Inserisci tutti i risultati prima di confermare.");
+            }
+        }
+
+        Map<Long, MatchdayFixture> fixtureMap = matchdayFixtureRepository.findByMatchdayId(matchdayId)
+                .stream().collect(Collectors.toMap(MatchdayFixture::getId, f -> f));
+
+        for (FixtureResultRequest f : request.getFixtures()) {
+            MatchdayFixture fixture = fixtureMap.get(f.getFixtureId());
+            if (fixture == null) continue;
+            fixture.setHomeScore(f.getHomeScore());
+            fixture.setAwayScore(f.getAwayScore());
+            fixture.setResultLoaded(true);
+            matchdayFixtureRepository.save(fixture);
+        }
+
+        matchday.setStatus(MatchdayStatus.RESULTS_LOADED);
+        matchdayRepository.save(matchday);
+
+        process(matchdayId);
+
+        return matchday;
+    }
 
     @Transactional
     public void process(Long matchdayId) {
@@ -76,10 +112,7 @@ public class MatchdayProcessingService {
                 .filter(s -> s.getStatus() == BetSlipStatus.WON)
                 .collect(Collectors.toList());
 
-        if (winners.isEmpty()) {
-            long memberCount = leagueMembershipRepository.countByLeagueId(league.getId());
-            jackpot.setCurrentAmount(jackpot.getCurrentAmount() + league.getMatchdayCost() * (int) memberCount);
-        } else {
+        if (!winners.isEmpty()) {
             int share = jackpot.getCurrentAmount() / winners.size();
             int remainder = jackpot.getCurrentAmount() % winners.size();
             for (BetSlip winner : winners) {

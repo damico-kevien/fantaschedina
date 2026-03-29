@@ -47,7 +47,7 @@
                   th:classappend="${slip.status.name() == 'WON'}  ? 'bg-success' :
                                    (${slip.status.name() == 'LOST'} ? 'bg-danger'  :
                                    (${slip.status.name() == 'VOID'} ? 'bg-secondary' : 'bg-warning text-dark'))"
-                  th:text="${slip.status}"></span>
+                  th:text="${slip.status.label}"></span>
             <div class="text-muted small mt-1"
                  th:text="'Inviata il ' + ${#temporals.format(slip.submittedAt, 'dd/MM/yyyy HH:mm')}"></div>
             <span th:if="${slip.isAutoSubmitted}" class="badge bg-warning text-dark mt-1">Auto-inviata</span>

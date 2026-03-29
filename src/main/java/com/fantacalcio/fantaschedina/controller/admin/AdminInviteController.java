@@ -2,9 +2,8 @@ package com.fantacalcio.fantaschedina.controller.admin;
 
 import com.fantacalcio.fantaschedina.domain.entity.League;
 import com.fantacalcio.fantaschedina.dto.InviteRequest;
-import com.fantacalcio.fantaschedina.repository.InviteRepository;
-import com.fantacalcio.fantaschedina.repository.LeagueRepository;
 import com.fantacalcio.fantaschedina.service.InviteService;
+import com.fantacalcio.fantaschedina.service.LeagueService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -22,13 +21,12 @@ import java.util.stream.Collectors;
 public class AdminInviteController {
 
     private final InviteService inviteService;
-    private final LeagueRepository leagueRepository;
-    private final InviteRepository inviteRepository;
+    private final LeagueService leagueService;
 
     @GetMapping
     public String listInvites(Model model) {
-        model.addAttribute("invites", inviteRepository.findAll());
-        model.addAttribute("leagues", leagueRepository.findAll());
+        model.addAttribute("invites", inviteService.findAll());
+        model.addAttribute("leagues", leagueService.findAll());
         model.addAttribute("leagueNames", buildLeagueNamesMap());
         model.addAttribute("inviteRequest", new InviteRequest());
         return "admin/invites";
@@ -40,8 +38,8 @@ public class AdminInviteController {
                              Model model,
                              RedirectAttributes redirectAttributes) {
         if (result.hasErrors()) {
-            model.addAttribute("invites", inviteRepository.findAll());
-            model.addAttribute("leagues", leagueRepository.findAll());
+            model.addAttribute("invites", inviteService.findAll());
+            model.addAttribute("leagues", leagueService.findAll());
             model.addAttribute("leagueNames", buildLeagueNamesMap());
             return "admin/invites";
         }
@@ -69,7 +67,7 @@ public class AdminInviteController {
     }
 
     private Map<Long, String> buildLeagueNamesMap() {
-        return leagueRepository.findAll().stream()
+        return leagueService.findAll().stream()
             .collect(Collectors.toMap(League::getId, l -> l.getName() + " (" + l.getSeason() + ")"));
     }
 }

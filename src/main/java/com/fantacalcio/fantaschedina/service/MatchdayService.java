@@ -67,17 +67,4 @@ public class MatchdayService {
                 .flatMap(m -> fantaTeamRepository.findByLeagueMembershipId(m.getId()));
     }
 
-    /**
-     * Returns all leagues the user is a member of, paired with the membership.
-     */
-    public List<LeagueWithMembership> getLeaguesForUser(Long userId) {
-        return leagueMembershipRepository.findByUserId(userId).stream()
-                .map(m -> leagueRepository.findById(m.getLeagueId())
-                        .map(l -> new LeagueWithMembership(l, m))
-                        .orElse(null))
-                .filter(lm -> lm != null)
-                .collect(Collectors.toList());
-    }
-
-    public record LeagueWithMembership(League league, LeagueMembership membership) {}
 }

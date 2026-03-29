@@ -33,6 +33,15 @@
         </ol>
     </nav>
 
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
     <!-- Header giornata -->
     <div class="d-flex justify-content-between align-items-start mb-3">
         <div>
@@ -46,7 +55,7 @@
                                (${matchday.status.name() == 'PROCESSED'} ? 'bg-secondary' :
                                (${matchday.status.name() == 'RESULTS_LOADED'} ? 'bg-info text-dark' :
                                (${matchday.status.name() == 'CLOSED'} ? 'bg-danger' : 'bg-warning text-dark')))"
-              th:text="${matchday.status}"></span>
+              th:text="${matchday.status.label}"></span>
     </div>
 
     <!-- Info scadenza / countdown -->
@@ -72,7 +81,7 @@
         </div>
         <div th:unless="${mySlip == null}" class="alert alert-success d-flex justify-content-between align-items-center">
             <span>Schedina già inviata</span>
-            <span class="badge bg-success" th:text="${mySlip.status}"></span>
+            <span class="badge bg-success" th:text="${mySlip.status.label}"></span>
         </div>
     </div>
 
