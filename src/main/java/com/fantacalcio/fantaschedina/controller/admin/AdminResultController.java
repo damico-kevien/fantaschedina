@@ -3,10 +3,13 @@ package com.fantacalcio.fantaschedina.controller.admin;
 import com.fantacalcio.fantaschedina.domain.entity.Matchday;
 import com.fantacalcio.fantaschedina.domain.enums.MatchdayStatus;
 import com.fantacalcio.fantaschedina.dto.MatchdayResultRequest;
+import com.fantacalcio.fantaschedina.repository.UserRepository;
 import com.fantacalcio.fantaschedina.service.LeagueService;
 import com.fantacalcio.fantaschedina.service.MatchdayProcessingService;
 import com.fantacalcio.fantaschedina.service.MatchdayService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +23,18 @@ public class AdminResultController {
     private final LeagueService leagueService;
     private final MatchdayService matchdayService;
     private final MatchdayProcessingService processingService;
+    private final UserRepository userRepository;
+
+    private Long adminId(UserDetails user) {
+        return userRepository.findByUsername(user.getUsername()).orElseThrow().getId();
+    }
 
     @GetMapping
-    public String form(@PathVariable Long leagueId, @PathVariable Long matchdayId, Model model) {
+    public String form(@PathVariable Long leagueId,
+                       @PathVariable Long matchdayId,
+                       @AuthenticationPrincipal UserDetails user,
+                       Model model) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         Matchday matchday = matchdayService.getMatchday(matchdayId, leagueId);
 
         if (matchday.getStatus() != MatchdayStatus.CLOSED) {
@@ -37,9 +49,12 @@ public class AdminResultController {
     }
 
     @PostMapping
-    public String submit(@PathVariable Long leagueId, @PathVariable Long matchdayId,
+    public String submit(@PathVariable Long leagueId,
+                         @PathVariable Long matchdayId,
+                         @AuthenticationPrincipal UserDetails user,
                          @ModelAttribute MatchdayResultRequest request,
                          RedirectAttributes redirectAttributes) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         try {
             Matchday matchday = processingService.loadResults(matchdayId, request);
             redirectAttributes.addFlashAttribute("success",

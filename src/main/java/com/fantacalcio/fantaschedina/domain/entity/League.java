@@ -36,4 +36,7 @@ public class League {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private LeagueStatus status;
+
+    @Column(nullable = false)
+    private Long createdByUserId;
 }

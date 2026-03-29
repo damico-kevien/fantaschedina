@@ -26,12 +26,26 @@ public class LeagueService {
     }
 
     @Transactional(readOnly = true)
+    public List<League> findAllForAdmin(Long adminUserId) {
+        return leagueRepository.findByCreatedByUserId(adminUserId);
+    }
+
+    @Transactional(readOnly = true)
     public League findById(Long id) {
         return leagueRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Lega non trovata: " + id));
     }
 
-    public League create(LeagueRequest request) {
+    @Transactional(readOnly = true)
+    public League findByIdForAdmin(Long id, Long adminUserId) {
+        League league = findById(id);
+        if (!league.getCreatedByUserId().equals(adminUserId)) {
+            throw new IllegalArgumentException("Non hai accesso a questa lega.");
+        }
+        return league;
+    }
+
+    public League create(LeagueRequest request, Long adminUserId) {
         League league = League.builder()
             .name(request.getName())
             .season(request.getSeason())
@@ -39,6 +53,7 @@ public class LeagueService {
             .jackpotStart(request.getJackpotStart())
             .betDeadlineMinutes(request.getBetDeadlineMinutes())
             .status(LeagueStatus.SETUP)
+            .createdByUserId(adminUserId)
             .build();
         league = leagueRepository.save(league);
 

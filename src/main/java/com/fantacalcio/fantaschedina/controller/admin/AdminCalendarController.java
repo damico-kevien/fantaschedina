@@ -1,11 +1,14 @@
 package com.fantacalcio.fantaschedina.controller.admin;
 
 import com.fantacalcio.fantaschedina.dto.MatchdayScheduleRequest;
+import com.fantacalcio.fantaschedina.repository.UserRepository;
 import com.fantacalcio.fantaschedina.service.CalendarService;
 import com.fantacalcio.fantaschedina.service.LeagueService;
 import com.fantacalcio.fantaschedina.service.MatchdayService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -22,11 +25,19 @@ public class AdminCalendarController {
     private final CalendarService calendarService;
     private final LeagueService leagueService;
     private final MatchdayService matchdayService;
+    private final UserRepository userRepository;
 
     private static final String SESSION_KEY = "pendingCsvImport";
 
+    private Long adminId(UserDetails user) {
+        return userRepository.findByUsername(user.getUsername()).orElseThrow().getId();
+    }
+
     @GetMapping
-    public String calendar(@PathVariable Long leagueId, Model model) {
+    public String calendar(@PathVariable Long leagueId,
+                           @AuthenticationPrincipal UserDetails user,
+                           Model model) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         var matchdays = calendarService.findMatchdaysByLeague(leagueId);
 
         model.addAttribute("league", leagueService.findById(leagueId));
@@ -38,9 +49,11 @@ public class AdminCalendarController {
 
     @PostMapping("/import")
     public String importCsv(@PathVariable Long leagueId,
+                            @AuthenticationPrincipal UserDetails user,
                             @RequestParam("file") MultipartFile file,
                             HttpSession session,
                             RedirectAttributes redirectAttributes) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Seleziona un file CSV");
             return "redirect:/admin/leagues/" + leagueId + "/calendar";
@@ -62,9 +75,11 @@ public class AdminCalendarController {
 
     @PostMapping("/import/confirm")
     public String confirmImport(@PathVariable Long leagueId,
+                                @AuthenticationPrincipal UserDetails user,
                                 @RequestParam(defaultValue = "false") boolean overwrite,
                                 HttpSession session,
                                 RedirectAttributes redirectAttributes) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         byte[] csvBytes = (byte[]) session.getAttribute(SESSION_KEY);
         if (csvBytes == null) {
             redirectAttributes.addFlashAttribute("error", "Sessione scaduta, ricarica il CSV");
@@ -84,8 +99,10 @@ public class AdminCalendarController {
 
     @PostMapping("/matchday")
     public String addMatchday(@PathVariable Long leagueId,
+                              @AuthenticationPrincipal UserDetails user,
                               @RequestParam Integer number,
                               RedirectAttributes redirectAttributes) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         try {
             calendarService.addMatchday(leagueId, number);
             redirectAttributes.addFlashAttribute("success", "Giornata " + number + " creata");
@@ -98,9 +115,11 @@ public class AdminCalendarController {
     @PostMapping("/{matchdayId}/fixture")
     public String addFixture(@PathVariable Long leagueId,
                              @PathVariable Long matchdayId,
+                             @AuthenticationPrincipal UserDetails user,
                              @RequestParam Long homeTeamId,
                              @RequestParam Long awayTeamId,
                              RedirectAttributes redirectAttributes) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         try {
             calendarService.addFixture(leagueId, matchdayId, homeTeamId, awayTeamId);
             redirectAttributes.addFlashAttribute("success", "Partita aggiunta");
@@ -113,8 +132,10 @@ public class AdminCalendarController {
     @PostMapping("/{matchdayId}/schedule")
     public String schedule(@PathVariable Long leagueId,
                            @PathVariable Long matchdayId,
+                           @AuthenticationPrincipal UserDetails user,
                            @ModelAttribute MatchdayScheduleRequest request,
                            RedirectAttributes redirectAttributes) {
+        leagueService.findByIdForAdmin(leagueId, adminId(user));
         try {
             calendarService.scheduleMatchday(matchdayId, request);
             redirectAttributes.addFlashAttribute("success", "Date aggiornate");
