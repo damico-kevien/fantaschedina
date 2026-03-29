@@ -29,8 +29,8 @@ public class AdminDashboardService {
     private final InviteRepository inviteRepository;
     private final MatchdayService matchdayService;
 
-    public List<AdminLeagueCard> buildLeagueCards() {
-        return leagueRepository.findAll().stream()
+    public List<AdminLeagueCard> buildLeagueCards(Long adminUserId) {
+        return leagueRepository.findByCreatedByUserId(adminUserId).stream()
                 .map(this::buildCard)
                 .toList();
     }
