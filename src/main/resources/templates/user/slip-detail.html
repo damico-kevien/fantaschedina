@@ -76,7 +76,7 @@
                             <span th:text="${fixture.homeScore} + ' - ' + ${fixture.awayScore}"></span>
                         </div>
                     </td>
-                    <td class="text-center text-muted small" th:text="${pick?.outcomeType}"></td>
+                    <td class="text-center text-muted small" th:text="${pick?.outcomeType?.label}"></td>
                     <td class="text-center">
                         <span th:if="${pick != null}" class="badge fs-6"
                               th:classappend="${pick.isCorrect == null}  ? 'bg-warning text-dark' :

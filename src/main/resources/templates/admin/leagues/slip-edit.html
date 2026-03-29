@@ -32,12 +32,7 @@
 
             <div th:if="${slotStat.first or slot.template.outcomeType != pickSlots[__${slotStat.index - 1}__].template.outcomeType}"
                  class="mt-3 mb-2">
-                <span class="badge bg-secondary"
-                      th:text="${slot.template.outcomeType.name() == 'RESULT_1X2'}    ? '1X2'           :
-                                (${slot.template.outcomeType.name() == 'DOUBLE_CHANCE'} ? 'Doppia Chance'  :
-                                (${slot.template.outcomeType.name() == 'GOAL_NOGOAL'}   ? 'Goal / No Goal' :
-                                                                                          'Over / Under'))">
-                </span>
+                <span class="badge bg-secondary" th:text="${slot.template.outcomeType.label}"></span>
                 <span th:if="${slot.template.outcomeType.name() == 'OVER_UNDER'}"
                       class="text-muted ms-1 small"
                       th:text="'(soglia ' + ${slot.template.overUnderThreshold} + ')'"></span>

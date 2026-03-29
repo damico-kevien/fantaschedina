@@ -105,7 +105,7 @@
                                   th:text="${teamNames[f.homeFantaTeamId]} + ' vs ' + ${teamNames[f.awayFantaTeamId]}">
                             </span>
                         </td>
-                        <td class="text-muted small" th:text="${pick.outcomeType}"></td>
+                        <td class="text-muted small" th:text="${pick.outcomeType.label}"></td>
                         <td class="text-center fw-bold" th:text="${pick.pickedOutcome}"></td>
                         <td th:if="${mySlip.status.name() != 'PENDING'}" class="text-center">
                             <span th:if="${pick.isCorrect == true}"  class="badge bg-success">✓</span>

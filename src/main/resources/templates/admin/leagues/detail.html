@@ -100,14 +100,7 @@
                             <tbody>
                                 <tr th:each="row, i : *{rows}">
                                     <input type="hidden" th:field="*{rows[__${i.index}__].outcomeType}">
-                                    <td>
-                                        <span th:switch="${row.outcomeType.name()}">
-                                            <span th:case="'RESULT_1X2'">1X2</span>
-                                            <span th:case="'DOUBLE_CHANCE'">Doppia chance</span>
-                                            <span th:case="'GOAL_NOGOAL'">Goal / No goal</span>
-                                            <span th:case="'OVER_UNDER'">Over / Under</span>
-                                        </span>
-                                    </td>
+                                    <td th:text="${row.outcomeType.label}"></td>
                                     <td>
                                         <input type="number" class="form-control form-control-sm"
                                                th:field="*{rows[__${i.index}__].requiredCount}"
